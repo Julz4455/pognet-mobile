@@ -1,5 +1,5 @@
 import * as React from 'react'
-import Feed from './screens/Feed'
+import FeedStack from './screens/Feed'
 import { View, Text } from 'react-native'
 import { NavigationContainer } from '@react-navigation/native'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
@@ -38,7 +38,7 @@ export default App = () => {
           inactiveTintColor: 'gray',
           showLabel: false
         }}>
-        <Tab.Screen name="Feed" component={Feed} />
+        <Tab.Screen name="Feed" component={FeedStack} />
         <Tab.Screen name="Settings" component={Settings} />
       </Tab.Navigator>
     </NavigationContainer>

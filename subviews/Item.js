@@ -1,8 +1,25 @@
 import { StatusBar } from 'expo-status-bar'
 import React, { useEffect, useState } from 'react'
-import { StyleSheet, Text, View, LayoutAnimation, ActivityIndicator, Image } from 'react-native'
+import {
+  StyleSheet,
+  Text,
+  View,
+  LayoutAnimation,
+  ActivityIndicator,
+  Image,
+  TouchableWithoutFeedback
+} from 'react-native'
+import * as ImagePicker from 'expo-image-picker'
+import { useNavigation } from '@react-navigation/native';
+
+const downloadImage = async (uri) => {
+  const { granted } = await ImagePicker.requestCameraRollPermissionsAsync()
+  if(!granted) return
+  // ImagePicker.
+}
 
 export default Item = ({item}) => {
+  const navigation = useNavigation()
   const [isLoading, setLoading] = useState(true)
   const [author, setAuthor] = useState([])
   const [board, setBoard] = useState([])
@@ -12,11 +29,17 @@ export default Item = ({item}) => {
       fetch(`http://192.168.1.249/api/user/${item._author}`)
         .then(res => res.json())
         .then(json => setAuthor(json))
-        .catch(err => console.error(err))
+        .catch(err => {
+          setAuthor([{ username: 'No Internet Connection', photo: null }])
+          console.error(err)
+        })
       fetch(`http://192.168.1.249/api/board/${item._board}`)
         .then(res => res.json())
         .then(json => setBoard(json))
-        .catch(err => console.error(err))
+        .catch(err => {
+          setBoard([{ displayName: 'No_Internet' }])
+          console.error(err)
+        })
         .finally(_ => setLoading(false))
     } catch(e) {
       console.log(e)
@@ -36,7 +59,10 @@ export default Item = ({item}) => {
             <Text style={styles.author}>{author.username}</Text>
             { item.hasImage ? (
                 <View style={styles.imageContainer}>
-                  <Image style={{ width: '100%', height: 100 }} onError={e => console.error(e)} onLoad={() => console.log('Loaded successfully')} source={{ uri: `http://192.168.1.248/${item.image}` }}/>
+                  <TouchableWithoutFeedback onLongPress={() => downloadImage(`http://192.168.1.249/${item.image}`)} onPress={() => navigation.navigate('Media', { image: `http://192.168.1.249/${item.image}` })}>
+                    <Image style={{ width: '100%', height: 200, borderRadius: 8 }} onError={e => console.error(e)} onLoad={() => console.log('Loaded successfully')} source={{ uri: `http://192.168.1.249/${item.image}` }}/>
+                  </TouchableWithoutFeedback>
+                  <Text>{item.body}</Text>
                 </View>
               ) : (
                 <View style={{ marginTop: 5 }}>
