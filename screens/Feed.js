@@ -7,14 +7,17 @@ import {
   ActivityIndicator,
   FlatList,
   RefreshControl,
-  LayoutAnimation
+  LayoutAnimation,
+  Button
 } from 'react-native'
-import { createStackNavigator, TransitionPresets } from '@react-navigation/stack';
-import Media from './Media'
+import { createStackNavigator, TransitionPresets } from '@react-navigation/stack'
 import Item from '../subviews/Item'
 import Constants from 'expo-constants'
+import ProfileSheet from '../screens/ProfileSheet'
 import { Ionicons } from '@expo/vector-icons'
-
+import RBSheet from "react-native-raw-bottom-sheet";
+import AuthorEmitter from '../emitters/AuthorEmitter'
+import { getInset } from 'react-native-safe-area-view'
 
 const wait = (timeout) => {
   return new Promise(resolve => {
@@ -38,7 +41,7 @@ Feed = () => {
           console.error(err)
         })
         .finally(_ => {
-          wait(500).then(_ => {
+          wait(800).then(_ => {
             setRefreshing(false)
           })
         })
@@ -48,6 +51,8 @@ Feed = () => {
       return;
     }
   }, [])
+
+  const sheetRef = React.useRef(null);
 
   useEffect(() => {
     try {
@@ -64,13 +69,22 @@ Feed = () => {
       console.error(err)
       return;
     }
-  }, [])
+    // console.log(sheetRef.current)
+  }, [sheetRef])
+
+  AuthorEmitter.shared.on('authorModal', author => {
+    AuthorEmitter.shared.setAuthor(author)
+    if(sheetRef.current != null)
+      sheetRef.current.open()
+  })
+
   LayoutAnimation.easeInEaseOut()
   return (
     <View style={styles.container}>
       <StatusBar style="auto" />
       {isLoading ? <ActivityIndicator/> : (
         <FlatList
+          showsHorizontalScrollIndicator={false}
           refreshControl={
             <RefreshControl refreshing={refreshing}
             onRefresh={onRefresh}/>
@@ -84,6 +98,29 @@ Feed = () => {
           }}
         />
       )}
+      <RBSheet
+        ref={sheetRef}
+        height={500}
+        openDuration={200}
+        closeOnDragDown={true}
+        customStyles={{
+          container: {
+            borderTopLeftRadius: 13,
+            borderTopRightRadius: 13,
+          },
+          draggableIcon: {
+            width: 100,
+            shadowColor: 'gray',
+            shadowRadius: 5,
+            shadowOffset: {
+              width: 1,
+              height: 1,
+            },
+            shadowOpacity: 0.2,
+          }
+        }}>
+          <ProfileSheet/>
+      </RBSheet>
     </View>
   )
 }
@@ -97,17 +134,16 @@ export default FeedStack = () => {
       screenOptions={({ route, navigation }) => ({
         headerShown: false,
         gestureEnabled: true,
-        cardOverlayEnabled: true,
-        headerStatusBarHeight:
-          navigation.dangerouslyGetState().routes.indexOf(route) > 0
-            ? 0
-            : undefined,
-        ...TransitionPresets.ModalPresentationIOS,
+        // cardOverlayEnabled: true,
+        // headerStatusBarHeight:
+        //   navigation.dangerouslyGetState().routes.indexOf(route) > 0
+        //     ? 0
+        //     : undefined,
+        // ...TransitionPresets.ModalPresentationIOS,
       })}
-      mode="modal"
+      // mode="modal"
     >
       <Stack.Screen name="Feed" component={Feed} />
-      <Stack.Screen name="Media" component={Media} />
     </Stack.Navigator>
   )
 }

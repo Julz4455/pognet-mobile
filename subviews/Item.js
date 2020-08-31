@@ -7,22 +7,24 @@ import {
   LayoutAnimation,
   ActivityIndicator,
   Image,
-  TouchableWithoutFeedback
+  TouchableWithoutFeedback,
+  Alert,
+  Easing
 } from 'react-native'
-import * as ImagePicker from 'expo-image-picker'
-import { useNavigation } from '@react-navigation/native';
-
-const downloadImage = async (uri) => {
-  const { granted } = await ImagePicker.requestCameraRollPermissionsAsync()
-  if(!granted) return
-  // ImagePicker.
-}
+import Animated from 'react-native-reanimated'
+import BottomSheet from 'reanimated-bottom-sheet'
+import ZoomImage from '../screens/ZoomImage'
+import { Video } from 'expo-av'
+import { useNavigation } from '@react-navigation/native'
+import AuthorEmitter from '../emitters/AuthorEmitter'
 
 export default Item = ({item}) => {
   const navigation = useNavigation()
   const [isLoading, setLoading] = useState(true)
   const [author, setAuthor] = useState([])
   const [board, setBoard] = useState([])
+
+  const sheetRef = React.useRef(null);
 
   useEffect(() => {
     try {
@@ -56,16 +58,23 @@ export default Item = ({item}) => {
               <Text style={styles.title}>{item.title}</Text>
               <Text style={styles.board}>p!{board.displayName}</Text>
             </View>
-            <Text style={styles.author}>{author.username}</Text>
+            <TouchableWithoutFeedback onPress={() => AuthorEmitter.shared.emit('authorModal', author)}>
+              <Text style={styles.author}>{author.username}</Text>
+            </TouchableWithoutFeedback>
             { item.hasImage ? (
-                <View style={styles.imageContainer}>
-                  <TouchableWithoutFeedback onLongPress={() => downloadImage(`http://192.168.1.249/${item.image}`)} onPress={() => navigation.navigate('Media', { image: `http://192.168.1.249/${item.image}` })}>
-                    <Image style={{ width: '100%', height: 200, borderRadius: 8 }} onError={e => console.error(e)} onLoad={() => console.log('Loaded successfully')} source={{ uri: `http://192.168.1.249/${item.image}` }}/>
-                  </TouchableWithoutFeedback>
+                <View style={styles.mediaContainer}>
+                  <ZoomImage
+                    source={{ uri: `http://192.168.1.249/${item.image}` }}
+                    imgStyle={{ width: '100%', height: 230, borderRadius: 8, marginVertical: 5, marginTop: 15 }}
+                    enableScaling={false}
+                    easingFunc={Easing.easeInEaseOut}
+                    rebounceDuration={1000}
+                  />
                   <Text>{item.body}</Text>
                 </View>
               ) : (
                 <View style={{ marginTop: 5 }}>
+
                   <Text>{item.body}</Text>
                 </View>
               )
@@ -94,11 +103,11 @@ const styles = StyleSheet.create({
   },
   title: {
     fontWeight: '700',
-    fontSize: 18
+    fontSize: 20
   },
   author: {
     fontWeight: '600',
-    fontSize: 12
+    fontSize: 14
   },
   board: {
     fontWeight: '600',

@@ -1,9 +1,10 @@
 import * as React from 'react'
 import FeedStack from './screens/Feed'
-import { View, Text } from 'react-native'
+import { View, Text, DevSettings } from 'react-native'
 import { NavigationContainer } from '@react-navigation/native'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { Ionicons } from '@expo/vector-icons'
+import AuthorEmitter from './emitters/AuthorEmitter'
 
 const Tab = createBottomTabNavigator()
 
@@ -16,6 +17,9 @@ Settings = () => {
 }
 
 export default App = () => {
+  React.useEffect(() => {
+    AuthorEmitter.shared.removeAllListeners('authorModal')
+  }, [])
   return (
     <NavigationContainer>
       <Tab.Navigator
