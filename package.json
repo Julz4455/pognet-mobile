@@ -38,7 +38,8 @@
     "react-native-video": "^5.1.0-alpha8",
     "react-native-web": "~0.11.7",
     "react-native-zoom-image": "^0.1.2",
-    "reanimated-bottom-sheet": "^1.0.0-alpha.22"
+    "reanimated-bottom-sheet": "^1.0.0-alpha.22",
+    "util": "^0.12.3"
   },
   "devDependencies": {
     "@babel/core": "^7.8.6",

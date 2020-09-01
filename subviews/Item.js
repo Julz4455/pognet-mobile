@@ -67,8 +67,11 @@ export default Item = ({item}) => {
                     source={{ uri: `http://192.168.1.249/${item.image}` }}
                     imgStyle={{ width: '100%', height: 230, borderRadius: 8, marginVertical: 5, marginTop: 15 }}
                     enableScaling={false}
-                    easingFunc={Easing.easeInEaseOut}
+                    easingFunc={Easing.cubic}
                     rebounceDuration={1000}
+                    post={item}
+                    author={author}
+                    board={board}
                   />
                   <Text>{item.body}</Text>
                 </View>
@@ -99,7 +102,7 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.18,
     shadowRadius: 1.0,
-    elevation: 1
+    elevation: 1,
   },
   title: {
     fontWeight: '700',

@@ -1,8 +1,8 @@
-const EventEmitter = require('events')
+import EventEmitter from 'events'
 
-let author
+export let author
 
-class AuthorEmitter extends EventEmitter {
+export default class AuthorEmitter extends EventEmitter {
   setAuthor(auth) {
     author = auth
   }
@@ -12,5 +12,3 @@ class AuthorEmitter extends EventEmitter {
 }
 
 AuthorEmitter.shared = new AuthorEmitter()
-
-module.exports = AuthorEmitter

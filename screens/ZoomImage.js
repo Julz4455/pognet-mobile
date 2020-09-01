@@ -15,7 +15,7 @@ import {
   findNodeHandle,
   Dimensions,
   TouchableWithoutFeedback,
-  Share
+  Text
 } from 'react-native';
 import Animation from './Animation';
 const winWidth = Dimensions.get('window').width;
@@ -125,6 +125,9 @@ class ZoomImage extends Component {
             showDuration={this.props.showDuration}
             easingFunc={this.props.easingFunc}
             enableScaling={this.props.enableScaling}
+            post={this.props.post}
+            author={this.props.author}
+            board={this.props.board}
           />
         </View>
       </TouchableWithoutFeedback>
@@ -140,6 +143,11 @@ class ImageModal extends Component {
         backgroundColor: 'rgba(0, 0, 0, 1)'
       }
     };
+    this._postMeta = {
+      style: {
+        opacity: 1
+      }
+    }
     this._modalStyle = JSON.parse(JSON.stringify(this._initModalStyle));
     this._initContentStyle = {
       style: {
@@ -231,12 +239,6 @@ class ImageModal extends Component {
       }
     }).start();
   }
-  _closeModalByTap() {
-    if (this._inAnimation) {
-      return false;
-    }
-    this._closeModal(true);
-  }
   _rebounce(isDown) {
     const {rebounceDuration, easingFunc} = this.props;
     let current = this._contentStyle.style.top;
@@ -263,7 +265,7 @@ class ImageModal extends Component {
     // this._contentStyle.style.right = -dx;
     this._contentStyle.style.top = dy;
     this._contentStyle.style.bottom = -dy;
-    this._modalStyle.style.backgroundColor = `rgba(0, 0, 0, ${1 - Math.abs(dy) / winHeight * 0.9})`;
+    this._modalStyle.style.backgroundColor = `rgba(0, 0, 0, ${0.9 - Math.abs(dy) / winHeight * 0.9})`;
     if (this.props.enableScaling) {
       this._imgSize.style.width = width * (1 - Math.abs(dy / winHeight) * 0.6);
       this._imgSize.style.height = height * (1 - Math.abs(dy / winHeight) * 0.6);
@@ -288,7 +290,7 @@ class ImageModal extends Component {
       start: 0,
       end: 1,
       duration: this.props.showDuration,
-      easingFunc: Easing.ease,
+      easingFunc: Easing.cubic,
       onAnimationFrame: (val) => {
         this.mask && this.mask.setNativeProps({style: {
           opacity: val
@@ -299,12 +301,54 @@ class ImageModal extends Component {
       }
     }).start();
   }
+  _closeModalByTap() {
+    if (this._inAnimation) {
+      return false;
+    }
+    this._inAnimation = true;
+    if(this._postMeta.style.opacity == 0) {
+      new Animation({
+        start: 0,
+        end: 1,
+        duration: 325,
+        easingFunc: Easing.cubic,
+        onAnimationFrame: (val) => {
+          this.postMeta && this.postMeta.setNativeProps({style: {
+            opacity: val
+          }});
+          this._postMeta.style.opacity = val
+        },
+        onAnimationEnd: () => {
+          this._inAnimation = false;
+        }
+      }).start();
+    } else {
+      new Animation({
+        start: 1,
+        end: 0,
+        duration: 300,
+        easingFunc: Easing.cubic,
+        onAnimationFrame: (val) => {
+          this.postMeta && this.postMeta.setNativeProps({style: {
+            opacity: val
+          }});
+          this._postMeta.style.opacity = val
+        },
+        onAnimationEnd: () => {
+          this._inAnimation = false;
+        }
+      }).start();
+    }
+  }
   render () {
     const {
       visible,
       onClose,
       source,
-      size  // origin size of the image
+      size, // origin size of the image
+      post,
+      author,
+      board
     } = this.props;
     if (visible) { this._inAnimation = true; }
     this._initImgSize.style = size;
@@ -320,6 +364,16 @@ class ImageModal extends Component {
             <View
               ref={ref => {this.content = ref;}}
               style={styles.content}>
+              <View style={styles.postMetadata} ref={postMeta => {this.postMeta = postMeta;}}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '72%', marginBottom: -10 }}>
+                  <Text style={styles.postTitle}>{post.title}</Text>
+                  <TouchableWithoutFeedback style={styles.postClose} onPress={this._closeModal}>
+                    <Text style={{ fontSize: 32, color: 'white' }}>{'\u00D7'}</Text>
+                  </TouchableWithoutFeedback>
+                </View>
+                <Text style={styles.boardName}>p!{board.displayName}</Text>
+                <Text style={styles.postAuthor}>{author.username}</Text>
+              </View>
               <Image ref={img => {this.img = img;}} source={source} style={[size, styles.img]}/>
             </View>
           </TouchableWithoutFeedback>
@@ -336,7 +390,7 @@ const styles = StyleSheet.create({
     left: 0,
     top: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 1)',
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
     opacity: 0
   },
   content: {
@@ -347,7 +401,8 @@ const styles = StyleSheet.create({
     bottom: 0,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'transparent'
+    backgroundColor: 'transparent',
+    flex: 1
   },
   toucharea: {
     flex: 1,
@@ -355,8 +410,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     alignSelf: 'stretch'
   },
-  modalText: {
-    color: '#fff'
+  postMetadata: {
+    position: 'absolute',
+    left: '5%',
+    top: '2.5%',
+    backgroundColor: 'transparent',
+    opacity: 1
+  },
+  postTitle: {
+    color: '#fff',
+    fontSize: 26,
+    fontWeight: '500',
+  },
+  postAuthor: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '300'
+  },
+  boardName: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: '300'
   }
 });
 

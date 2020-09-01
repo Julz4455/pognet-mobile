@@ -107,16 +107,12 @@ Feed = () => {
           container: {
             borderTopLeftRadius: 13,
             borderTopRightRadius: 13,
+            backgroundColor: 'transparent'
           },
           draggableIcon: {
-            width: 100,
-            shadowColor: 'gray',
-            shadowRadius: 5,
-            shadowOffset: {
-              width: 1,
-              height: 1,
-            },
-            shadowOpacity: 0.2,
+            backgroundColor: 'white',
+            opacity: 0.8,
+            width: 60
           }
         }}>
           <ProfileSheet/>

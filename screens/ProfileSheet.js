@@ -1,31 +1,79 @@
 import { StatusBar } from 'expo-status-bar'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import {
   StyleSheet,
   Text,
   View,
-  ScrollView,
   LayoutAnimation,
   ActivityIndicator,
   Image,
   TouchableWithoutFeedback,
   Alert,
-  Easing
+  Easing,
+  RefreshControl,
+  FlatList
 } from 'react-native'
 import AuthorEmitter from '../emitters/AuthorEmitter'
-import { Emitter } from 'react-native-particles'
+// import { Emitter } from 'react-native-particles'
+import Item from '../subviews/Item'
 import { useNavigation } from '@react-navigation/native'
+const util = require('util')
+const getAuthor = util.promisify(AuthorEmitter.shared.getAuthor)
 
 export default ProfileSheet = () => {
   const [isLoading, setLoading] = useState(true)
   const [author, setAuthor] = useState([])
+  const [posts, setPosts] = useState([])
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    try {
+      fetch(`http://192.168.1.249/api/posts/user/${author.username}`)
+        .then(res => res.json())
+        .then(json => setPosts(json))
+        .catch(err => {
+          setPosts([{ title: 'Couldn\'t load posts.', body: 'Please connect to internet and try again.', hasImage: false, hasVideo: false, tags: ['no', 'connection'], nsfw: false, votes: '10000'}])
+          console.error(err)
+        })
+        .finally(_ => {
+          wait(800).then(_ => {
+            setRefreshing(false)
+          })
+        })
+    } catch(e) {
+      setPosts([{ title: 'Couldn\'t load posts.', body: 'Please connect to internet and try again.', hasImage: false, hasVideo: false, tags: ['no', 'connection'], nsfw: false, votes: '10000'}])
+      console.error(err)
+      return;
+    }
+  }, [])
 
   useEffect(() => {
-    setAuthor(AuthorEmitter.shared.getAuthor())
-    setLoading(false)
+    try {
+      getAuthor().then(a => {
+        console.log(a)
+        setAuthor(a)
+        fetch(`http://192.168.1.249/api/posts/user/${a.username}`)
+          .then(_ => _.json())
+          .then(data => setPosts(data))
+          .catch(e => {
+            setPosts([{ title: 'Couldn\'t load posts.', body: 'Please connect to internet and try again.', hasImage: false, hasVideo: false, tags: ['no', 'connection'], nsfw: false, votes: '10000'}])
+            console.error(e)
+          })
+          .finally(_ => setLoading(false))
+      })
+      .catch(e => {
+        setPosts([{ title: 'Couldn\'t load posts.', body: 'Please connect to internet and try again.', hasImage: false, hasVideo: false, tags: ['no', 'connection'], nsfw: false, votes: '10000'}])
+        console.error(e)
+      })
+    } catch(e) {
+      setPosts([{ title: 'Couldn\'t load posts.', body: 'Please connect to internet and try again.', hasImage: false, hasVideo: false, tags: ['no', 'connection'], nsfw: false, votes: '10000'}])
+      console.error(e)
+    }
   }, [])
+  LayoutAnimation.easeInEaseOut()
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
       { isLoading ? <ActivityIndicator/> : (
         <>
           <View style={{ flexDirection: 'row' }}>
@@ -37,9 +85,10 @@ export default ProfileSheet = () => {
           </View>
           <Text style={styles.bio}>{String(author.bio).length > 127 ? String(author.bio).substring(0, 127).trim()+'...' : String(author.bio)}</Text>
           <Text style={{...styles.joined, marginTop: 5 + String(author.bio).length > 127 ? 0 : 40}}>Joined <Text style={styles.joinDate}>{author._epoch}.</Text>{author._admin ? ' They\'re also an admin!' : ''}</Text>
+
         </>
       )}
-    </ScrollView>
+    </View>
   )
 }
 
@@ -49,6 +98,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     padding: 16,
     height: 450,
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
   },
   pfp: {
     width: 80,
